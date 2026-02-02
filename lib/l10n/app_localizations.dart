@@ -98,23 +98,71 @@ abstract class AppLocalizations {
     Locale('pt'),
   ];
 
-  /// No description provided for @hello.
+  /// No description provided for @tutorialTitle.
   ///
   /// In en, this message translates to:
-  /// **'Hello'**
-  String get hello;
+  /// **'I18N GUIDE'**
+  String get tutorialTitle;
 
-  /// No description provided for @welcome.
+  /// No description provided for @learningHeader.
   ///
   /// In en, this message translates to:
-  /// **'Welcome'**
-  String get welcome;
+  /// **'Globalize your app.'**
+  String get learningHeader;
 
-  /// No description provided for @userGreeting.
+  /// No description provided for @learningSubheader.
   ///
   /// In en, this message translates to:
-  /// **'Hello {name}'**
-  String userGreeting(Object name);
+  /// **'Demonstration of how the framework handles different types of translations.'**
+  String get learningSubheader;
+
+  /// No description provided for @labelStatic.
+  ///
+  /// In en, this message translates to:
+  /// **'Static Text'**
+  String get labelStatic;
+
+  /// No description provided for @exampleStatic.
+  ///
+  /// In en, this message translates to:
+  /// **'This text is constant.'**
+  String get exampleStatic;
+
+  /// No description provided for @labelDynamic.
+  ///
+  /// In en, this message translates to:
+  /// **'Dynamic Value'**
+  String get labelDynamic;
+
+  /// No description provided for @exampleDynamic.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello, {name}!'**
+  String exampleDynamic(String name);
+
+  /// No description provided for @labelPlural.
+  ///
+  /// In en, this message translates to:
+  /// **'Pluralization'**
+  String get labelPlural;
+
+  /// No description provided for @examplePlural.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No interactions} =1{One interaction} other{{count} interactions}}'**
+  String examplePlural(int count);
+
+  /// No description provided for @instructionSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the EN/PT buttons in the top bar to switch languages.'**
+  String get instructionSwitch;
+
+  /// No description provided for @languageName.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get languageName;
 }
 
 class _AppLocalizationsDelegate

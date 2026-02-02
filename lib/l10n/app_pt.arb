@@ -1,5 +1,27 @@
 {
-  "hello": "Olá",
-  "welcome": "Bem-vindo",
-  "userGreeting": "Olá {name}"
+  "tutorialTitle": "GUIA I18N",
+  "learningHeader": "Globalize seu app.",
+  "learningSubheader": "Demonstração de como o framework gerencia diferentes tipos de traduções.",
+  "labelStatic": "Texto Estático",
+  "exampleStatic": "Este texto é constante.",
+  "labelDynamic": "Valor Dinâmico",
+  "exampleDynamic": "Olá, {name}!",
+  "@exampleDynamic": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "labelPlural": "Pluralização",
+  "examplePlural": "{count, plural, =0{Nenhuma interação} =1{Uma interação} other{{count} interações}}",
+  "@examplePlural": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "instructionSwitch": "Toque nos botões EN/PT na barra superior para trocar de idioma.",
+  "languageName": "Português"
 }
