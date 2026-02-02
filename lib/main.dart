@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'package:flutter_localization/l10n/app_localizations.dart';
+
+import 'package:flutter_localization/src/core/locale_controller.dart';
+
+import 'package:flutter_localization/src/providers/app_inherited_widget.dart';
 
 import 'package:flutter_localization/src/screens/home/home_screen.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(
+    AppInheritedWidget(localeController: LocaleController(), child: MyApp()),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -14,17 +19,20 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Localization',
-      debugShowCheckedModeBanner: false,
-      localizationsDelegates: const <LocalizationsDelegate>[
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: const <Locale>[Locale('en'), Locale('pt')],
-      home: const HomeScreen(),
+    final localeController = AppInheritedWidget.of(context)!.localeController;
+
+    return ListenableBuilder(
+      listenable: localeController,
+      builder: (context, child) {
+        return MaterialApp(
+          title: 'Flutter Localization',
+          debugShowCheckedModeBanner: false,
+          locale: localeController.locale,
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          home: const HomeScreen(),
+        );
+      },
     );
   }
 }
