@@ -4,6 +4,9 @@ import 'package:flutter_localization/l10n/app_localizations.dart';
 
 import 'package:flutter_localization/src/providers/app_inherited_widget.dart';
 
+import 'package:flutter_localization/src/shared/widgets/language_toggle_widget.dart';
+import 'package:flutter_localization/src/shared/widgets/section_header_widget.dart';
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -17,8 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final appInherited = AppInheritedWidget.of(context)!;
-    final currentLocale = appInherited.localeController.locale.languageCode;
+    final localeController = AppInheritedWidget.of(context)!.localeController;
 
     return Scaffold(
       backgroundColor: const Color(0xFFFBFBFB),
@@ -34,126 +36,60 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         actions: <Widget>[
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              spacing: 8.0,
-              children: <Widget>[
-                LanguageActionChipWidget(
-                  label: 'EN',
-                  isActive: currentLocale == 'en',
-                  onTap: () => appInherited.localeController.changeLocale('en'),
-                ),
-                LanguageActionChipWidget(
-                  label: 'PT',
-                  isActive: currentLocale == 'pt',
-                  onTap: () => appInherited.localeController.changeLocale('pt'),
-                ),
-              ],
-            ),
+          LanguageToggleWidget(
+            currentLocale: localeController.locale.languageCode,
+            onChanged: (code) => localeController.changeLocale(code),
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(
-              l10n.learningHeader,
-              style: const TextStyle(
-                fontSize: 32.0,
-                fontWeight: FontWeight.bold,
-                letterSpacing: -1.0,
-                color: Color(0xFF1A1A1A),
-              ),
+            SectionHeaderWidget(
+              title: l10n.learningHeader,
+              subtitle: l10n.learningSubheader,
+              titleSize: 32.0,
+              backgroundColor: Colors.transparent,
             ),
-            const SizedBox(height: 12.0),
-            Text(
-              l10n.learningSubheader,
-              style: const TextStyle(
-                fontSize: 16.0,
-                color: Color(0xFF666666),
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 40.0),
-            EduCardWidget(
-              label: l10n.labelStatic,
-              content: l10n.exampleStatic,
-              color: const Color(0xFFE3F2FD),
-              icon: Icons.text_fields,
-            ),
-            const SizedBox(height: 16.0),
-            EduCardWidget(
-              label: l10n.labelDynamic,
-              content: l10n.exampleDynamic('Flutter Dev'),
-              color: const Color(0xFFF3E5F5),
-              icon: Icons.unfold_more,
-            ),
-            const SizedBox(height: 16.0),
-            EduCardWidget(
-              label: l10n.labelPlural,
-              content: l10n.examplePlural(_counter),
-              color: const Color(0xFFE8F5E9),
-              icon: Icons.exposure_plus_1,
-              onTap: () {
-                setState(() {
-                  _counter++;
-                });
-              },
-            ),
-            const SizedBox(height: 40.0),
-            Center(
-              child: Text(
-                l10n.instructionSwitch,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 12.0,
-                  color: Colors.grey,
-                  fontStyle: FontStyle.italic,
-                ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                children: <Widget>[
+                  EduCardWidget(
+                    label: l10n.labelStatic,
+                    content: l10n.exampleStatic,
+                    color: const Color(0xFFE3F2FD),
+                    icon: Icons.text_fields,
+                  ),
+                  const SizedBox(height: 16.0),
+                  EduCardWidget(
+                    label: l10n.labelDynamic,
+                    content: l10n.exampleDynamic('Flutter Dev'),
+                    color: const Color(0xFFF3E5F5),
+                    icon: Icons.unfold_more,
+                  ),
+                  const SizedBox(height: 16.0),
+                  EduCardWidget(
+                    label: l10n.labelPlural,
+                    content: l10n.examplePlural(_counter),
+                    color: const Color(0xFFE8F5E9),
+                    icon: Icons.exposure_plus_1,
+                    onTap: () => setState(() => _counter++),
+                  ),
+                  const SizedBox(height: 40.0),
+                  Text(
+                    l10n.instructionSwitch,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 12.0,
+                      color: Colors.grey,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class LanguageActionChipWidget extends StatelessWidget {
-  const LanguageActionChipWidget({
-    super.key,
-    required this.label,
-    required this.isActive,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool isActive;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-        decoration: BoxDecoration(
-          color: isActive ? Colors.black : Colors.transparent,
-          borderRadius: BorderRadius.circular(8.0),
-          border: Border.all(
-            color: isActive ? Colors.black : Colors.grey.shade300,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isActive ? Colors.white : Colors.grey.shade600,
-            fontWeight: FontWeight.bold,
-            fontSize: 12.0,
-          ),
         ),
       ),
     );
@@ -165,15 +101,15 @@ class EduCardWidget extends StatelessWidget {
     super.key,
     required this.label,
     required this.content,
-    required this.color,
     required this.icon,
+    this.color = const Color(0xFFF5F5F7),
     this.onTap,
   });
 
   final String label;
   final String content;
-  final Color color;
   final IconData icon;
+  final Color color;
   final VoidCallback? onTap;
 
   @override
@@ -186,7 +122,7 @@ class EduCardWidget extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16.0),
-          border: Border.all(color: const Color(0xFFEEEEEE)),
+          border: Border.all(color: const Color(0xFFEEEEEE), width: 1.0),
         ),
         child: Row(
           children: <Widget>[
