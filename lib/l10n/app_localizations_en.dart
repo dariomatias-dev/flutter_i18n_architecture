@@ -53,4 +53,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get languageName => 'English';
+
+  @override
+  String get stateInitial => 'Waiting for layer intent...';
+
+  @override
+  String get msgServiceSuccess => 'Success intent from Service Layer';
+
+  @override
+  String get msgRepositoryError => 'Error intent from Repository Layer';
 }

@@ -32,4 +32,10 @@ abstract class L10nMessages {
 
   static LocalizedMessage get languageName => (l10n) => l10n.languageName;
 
+  static LocalizedMessage get stateInitial => (l10n) => l10n.stateInitial;
+
+  static LocalizedMessage get msgServiceSuccess => (l10n) => l10n.msgServiceSuccess;
+
+  static LocalizedMessage get msgRepositoryError => (l10n) => l10n.msgRepositoryError;
+
 }

@@ -23,5 +23,8 @@
     }
   },
   "instructionSwitch": "Toque nos botões EN/PT na barra superior para trocar de idioma.",
-  "languageName": "Português"
+  "languageName": "Português",
+  "stateInitial": "Aguardando intenção da camada...",
+  "msgServiceSuccess": "Intenção de sucesso da Camada de Serviço",
+  "msgRepositoryError": "Intenção de erro da Camada de Repositório"
 }

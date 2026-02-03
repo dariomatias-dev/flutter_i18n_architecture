@@ -23,5 +23,8 @@
     }
   },
   "instructionSwitch": "Tap the EN/PT buttons in the top bar to switch languages.",
-  "languageName": "English"
+  "languageName": "English",
+  "stateInitial": "Waiting for layer intent...",
+  "msgServiceSuccess": "Success intent from Service Layer",
+  "msgRepositoryError": "Error intent from Repository Layer"
 }

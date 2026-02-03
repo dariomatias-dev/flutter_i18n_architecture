@@ -53,4 +53,13 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get languageName => 'Português';
+
+  @override
+  String get stateInitial => 'Aguardando intenção da camada...';
+
+  @override
+  String get msgServiceSuccess => 'Intenção de sucesso da Camada de Serviço';
+
+  @override
+  String get msgRepositoryError => 'Intenção de erro da Camada de Repositório';
 }

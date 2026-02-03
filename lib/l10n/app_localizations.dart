@@ -163,6 +163,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'English'**
   String get languageName;
+
+  /// No description provided for @stateInitial.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for layer intent...'**
+  String get stateInitial;
+
+  /// No description provided for @msgServiceSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Success intent from Service Layer'**
+  String get msgServiceSuccess;
+
+  /// No description provided for @msgRepositoryError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error intent from Repository Layer'**
+  String get msgRepositoryError;
 }
 
 class _AppLocalizationsDelegate
