@@ -6,7 +6,7 @@ import 'package:flutter_localization/src/core/locale_controller.dart';
 
 import 'package:flutter_localization/src/providers/app_inherited_widget.dart';
 
-import 'package:flutter_localization/src/screens/home/home_screen.dart';
+import 'package:flutter_localization/src/screens/main/main_screen.dart';
 
 void main() {
   runApp(
@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
           locale: localeController.locale,
           supportedLocales: AppLocalizations.supportedLocales,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
-          home: const HomeScreen(),
+          home: const MainScreen(),
         );
       },
     );
