@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-import 'package:flutter_localization/l10n/app_localizations.dart';
+import 'package:flutter_i18n_architecture/l10n/app_localizations.dart';
 
-import 'package:flutter_localization/src/core/locale_controller.dart';
+import 'package:flutter_i18n_architecture/src/core/locale_controller.dart';
 
-import 'package:flutter_localization/src/providers/app_inherited_widget.dart';
+import 'package:flutter_i18n_architecture/src/providers/app_inherited_widget.dart';
 
-import 'package:flutter_localization/src/screens/main/main_screen.dart';
+import 'package:flutter_i18n_architecture/src/screens/main/main_screen.dart';
 
 void main() {
   runApp(

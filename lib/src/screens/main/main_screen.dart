@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 
-import 'package:flutter_localization/l10n/l10n_messages.dart';
+import 'package:flutter_i18n_architecture/l10n/l10n_messages.dart';
 
-import 'package:flutter_localization/src/core/extensions/build_context_extension.dart';
+import 'package:flutter_i18n_architecture/src/core/extensions/build_context_extension.dart';
 
-import 'package:flutter_localization/src/providers/app_inherited_widget.dart';
+import 'package:flutter_i18n_architecture/src/providers/app_inherited_widget.dart';
 
-import 'package:flutter_localization/src/screens/home/home_screen.dart';
-import 'package:flutter_localization/src/screens/localization/localization_screen.dart';
+import 'package:flutter_i18n_architecture/src/screens/home/home_screen.dart';
+import 'package:flutter_i18n_architecture/src/screens/localization/localization_screen.dart';
 
-import 'package:flutter_localization/src/shared/widgets/language_toggle_widget.dart';
+import 'package:flutter_i18n_architecture/src/shared/widgets/language_toggle_widget.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});

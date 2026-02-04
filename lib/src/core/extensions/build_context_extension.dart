@@ -1,8 +1,8 @@
 import 'package:flutter/widgets.dart';
 
-import 'package:flutter_localization/l10n/app_localizations.dart';
+import 'package:flutter_i18n_architecture/l10n/app_localizations.dart';
 
-import 'package:flutter_localization/l10n/l10n_messages.dart';
+import 'package:flutter_i18n_architecture/l10n/l10n_messages.dart';
 
 extension BuildContextExtension on BuildContext {
   String l10n(LocalizedMessage message) {

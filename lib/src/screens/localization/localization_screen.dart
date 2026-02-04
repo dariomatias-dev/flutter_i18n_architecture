@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-import 'package:flutter_localization/l10n/l10n_messages.dart';
+import 'package:flutter_i18n_architecture/l10n/l10n_messages.dart';
 
-import 'package:flutter_localization/src/core/extensions/build_context_extension.dart';
+import 'package:flutter_i18n_architecture/src/core/extensions/build_context_extension.dart';
 
-import 'package:flutter_localization/src/screens/home/home_screen.dart';
-import 'package:flutter_localization/src/screens/localization/localization_service.dart';
-import 'package:flutter_localization/src/screens/localization/widgets/action_button_widget.dart';
+import 'package:flutter_i18n_architecture/src/screens/home/home_screen.dart';
+import 'package:flutter_i18n_architecture/src/screens/localization/localization_service.dart';
+import 'package:flutter_i18n_architecture/src/screens/localization/widgets/action_button_widget.dart';
 
-import 'package:flutter_localization/src/shared/widgets/section_header_widget.dart';
+import 'package:flutter_i18n_architecture/src/shared/widgets/section_header_widget.dart';
 
 class LocalizationScreen extends StatefulWidget {
   const LocalizationScreen({super.key});

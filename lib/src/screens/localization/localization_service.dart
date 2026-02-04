@@ -1,4 +1,4 @@
-import 'package:flutter_localization/l10n/l10n_messages.dart';
+import 'package:flutter_i18n_architecture/l10n/l10n_messages.dart';
 
 class LocalizationService {
   LocalizedMessage getInitialState() => L10nMessages.stateInitial;

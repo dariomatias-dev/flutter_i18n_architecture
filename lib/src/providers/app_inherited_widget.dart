@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localization/src/core/locale_controller.dart';
+import 'package:flutter_i18n_architecture/src/core/locale_controller.dart';
 
 class AppInheritedWidget extends InheritedWidget {
   const AppInheritedWidget({
