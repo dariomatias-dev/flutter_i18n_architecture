@@ -10,49 +10,47 @@
 English | <a href="README.pt.md">Português</a>
 </p>
 
-<h1 align="center">Flutter Internationalization with Layered Architecture</h1>
+<h1 align="center">Internationalization in Flutter with Layered Architecture</h1>
 
 <p align="center">
-Architecture-oriented internationalization in Flutter, based on layer separation, responsibility decoupling, and controlled translation resolution.
+An architectural approach to internationalization in Flutter based on separation of responsibilities, decoupling of layers, and controlled resolution of translations.
 <br>
-<a href="#about-the-solution"><strong>Explore the documentation »</strong></a>
+<a href="#context"><strong>Explore the documentation »</strong></a>
 </p>
 
 ## Summary
 
-- [About the Solution](#about-the-solution)
+- [Context](#context)
 - [The Problem with Traditional Internationalization](#the-problem-with-traditional-internationalization)
-- [The Core Idea of the Solution](#the-core-idea-of-the-solution)
-- [Architecture and Responsibility Flow](#architecture-and-responsibility-flow)
-- [Fundamental Concepts](#fundamental-concepts)
+- [Architectural Limitations](#architectural-limitations)
+- [Architectural Solution](#architectural-solution)
+- [Conceptual Flow](#conceptual-flow)
+- [Core Concepts](#core-concepts)
 - [Folder Structure](#folder-structure)
-- [Practical Usage](#practical-usage)
-  - [Usage in the Presentation Layer](#usage-in-the-presentation-layer)
-  - [Dynamic Messages](#dynamic-messages)
-  - [Pluralization](#pluralization)
+- [Usage in Practice](#usage-in-practice)
 - [Automatic Message Generation](#automatic-message-generation)
+- [Advantages and Trade-offs](#advantages-and-trade-offs)
+- [Compatibility with the Official System](#compatibility-with-the-official-system)
 - [License](#license)
 - [Author](#author)
 
-## About the Solution
+## Context
 
-This solution adopts an **architectural approach to internationalization in Flutter**, structuring the translation process into **well-defined layers** with **clearly separated responsibilities**. The focus is to eliminate direct coupling between the user interface and lower layers, treating translation as an infrastructure concern rather than a cross-cutting dependency of the application.
+Internationalization in Flutter is officially supported through the `AppLocalizations` mechanism, accessed via `BuildContext`. This approach is appropriate when used **exclusively within the presentation layer**, where the widget tree context is available and valid.
 
-In conventional implementations, messages are retrieved directly via `AppLocalizations.of(context)`. This model requires the propagation of `BuildContext` beyond the presentation layer, resulting in improper dependencies in services, controllers, and domain layers. In addition to violating basic architectural principles, this pattern makes the code more fragile, since `context` may be unavailable or invalid outside the widget tree.
+However, in applications organized into layers, especially those aligned with principles such as **Clean Architecture**, **Onion Architecture**, or **Hexagonal Architecture**, the responsibility for deciding _which message should be displayed_ often belongs to domain or application layers rather than the UI layer.
 
-To solve this problem, the solution proposes a **message-intent-based flow**. Instead of requesting translated strings, lower layers return a **semantic representation of the message**, decoupled from language, format, and translation mechanism. The responsibility for converting this intent into a localized string is restricted to the correct point in the application, where the `BuildContext` exists and is valid.
-
-As a result, the lower layers of the application **do not depend on context**, nor do they have knowledge of `AppLocalizations`, `.arb` files, or localization rules. They only return message intents, preserving architectural isolation and ensuring that translation is resolved in a controlled and predictable way in the presentation layer.
+When this occurs, the traditional model begins to introduce structural issues.
 
 > **Note**</br>
-> This documentation exclusively describes the **internationalization architecture solution**.</br>
+> This documentation exclusively describes the **architecture of the internationalization solution**.</br>
 > Flutter I18N configuration is not covered here.</br>
 > For that topic, see:
 > [https://github.com/dariomatias-dev/materials/blob/main/technologies/Flutter/internationalization.md](https://github.com/dariomatias-dev/materials/blob/main/technologies/Flutter/internationalization.md)
 
-## Traditional Internationalization
+## The Problem with Traditional Internationalization
 
-In Flutter, internationalization **is applied directly in the presentation layer**, with translations being resolved during widget construction through `BuildContext`, which provides access to the framework’s native localization mechanism:
+In Flutter, the standard use of internationalization is straightforward:
 
 ```dart
 Text(
@@ -60,20 +58,16 @@ Text(
 );
 ```
 
-When restricted to the UI, this approach is functional and does not present issues.
-The problem arises when the application evolves and **the decision about which message should be displayed no longer belongs exclusively to the presentation layer**.
+When restricted to the UI layer, it works correctly.
 
-In layered applications, it is common for business rules to determine states and outcomes in areas such as:
+The issue arises when business decisions need to determine messages:
 
-- Controllers;
-- Services;
-- Use cases;
-- Repositories.
+- Controllers
+- Services
+- Use cases
+- Repositories
 
-These layers are not part of the widget tree and exist to express **domain decisions**, not presentation details.
-However, when attempting to reuse Flutter’s standard internationalization, translation ends up being forced into these layers.
-
-A common example of this problem is the following:
+Common example:
 
 ```dart
 class UserService {
@@ -97,68 +91,63 @@ class UserService {
 }
 ```
 
-This code clearly illustrates the problem with traditional internationalization when applied outside the presentation layer:
+## Architectural Limitations
 
-- `BuildContext` becomes a dependency of a non-presentation layer;
-- Business logic becomes aware of presentation-layer details;
-- The service becomes coupled to the widget tree;
-- The code becomes fragile, as `context` may not exist or may be invalid;
-- Unit tests start requiring context and localization configuration;
+This pattern generates several problems:
+
+- `BuildContext` becomes a dependency of non-presentation layers;
+- Domain logic becomes aware of infrastructure details;
+- Services become coupled to the widget tree;
+- Unit tests require localization setup;
+- The `context` may be invalid or unavailable;
 - Separation of responsibilities is broken.
 
-The core point is: **translation is happening outside the presentation layer**.
-Domain layers should not resolve translated text.
+The central issue is:
 
-## The Core Idea of the Solution
+> Translation is being resolved outside the presentation layer.
 
-The core idea of this solution is to **completely separate the message decision from its final translation**.
+This violates the fundamental principle that **dependencies must point inward**, not outward, as advocated by architectures such as Clean Architecture.
 
-Lower layers of the application **do not access translations**.
-They only pass a **message intent**.
+## Architectural Solution
 
-This means that these layers:
+The proposal of this solution is to completely separate:
 
-- Do not know about `BuildContext`;
-- Do not access `AppLocalizations`;
-- Do not depend on the active language;
-- Only return a **message intent**.
+- The **message decision**
+- From the **translation resolution**
 
-Translation happens exclusively in the presentation layer, where:
+Lower layers do not return translated `String` values.
+They return a **message intention**.
+
+Translation occurs exclusively in the presentation layer, where:
 
 - `BuildContext` is valid;
-- The current language is known;
+- The active language is known;
 - Access to `AppLocalizations` is safe.
 
-This change ensures that each layer fulfills only its own responsibility.
-
-## Architecture and Responsibility Flow
-
-The solution is organized into layers with well-defined responsibilities:
+## Conceptual Flow
 
 ```
-UI
-└─ BuildContext Extension
-└─ L10nMessages
-└─ AppLocalizations (generated by Flutter)
-└─ ARB Files
+[Domain / Services]
+        ↓
+  LocalizedMessage
+        ↓
+[Presentation Layer]
+        ↓
+ AppLocalizations
+        ↓
+   Final String
 ```
 
-In this model:
+#### Flow Logic
 
-- Domain layers decide **which message makes sense**;
-- The message is represented by an abstraction (`LocalizedMessage`);
-- The presentation layer resolves this abstraction into text at the correct moment.
-
-### Conceptual flow
-
-1. Lower layers return or expose a **message intent**;
-2. This intent does not contain translated text;
-3. The presentation layer receives the intent and resolves the translation using `BuildContext`;
+1. Lower layers return a message intention;
+2. The intention does not contain translated text;
+3. The presentation layer resolves the intention using `BuildContext`;
 4. The final text is displayed according to the active language.
 
-At no point do layers outside the presentation layer access translations directly.
+No layer outside the presentation layer accesses translations directly.
 
-## Fundamental Concepts
+## Core Concepts
 
 ### LocalizedMessage
 
@@ -166,15 +155,15 @@ At no point do layers outside the presentation layer access translations directl
 typedef LocalizedMessage = String Function(AppLocalizations l10n);
 ```
 
-`LocalizedMessage` represents a **message intent**.
+`LocalizedMessage` represents a **message intention**.
 
-It does not contain translated text, only the rule for obtaining it when `AppLocalizations` is available.
+It defines how to obtain the localized text but does not execute the translation until `AppLocalizations` is provided.
 
 This allows messages to be:
 
-- Defined outside the presentation layer;
 - Transported across layers;
-- Resolved only at display time.
+- Tested without depending on localization;
+- Resolved only at the appropriate moment.
 
 ### L10nMessages
 
@@ -182,14 +171,7 @@ This allows messages to be:
 abstract class L10nMessages {}
 ```
 
-`L10nMessages` acts as a **central catalog of message intents** for the application.
-
-Each entry:
-
-- Has a semantic name;
-- Represents a clear intent;
-- Directly maps to ARB keys;
-- Can be static or parameterized.
+`L10nMessages` acts as a central catalog of intentions.
 
 Example:
 
@@ -198,42 +180,7 @@ static LocalizedMessage get tutorialTitle =>
     (l10n) => l10n.tutorialTitle;
 ```
 
-## Folder Structure
-
-```text
-lib/
- ├─ l10n/
- │   ├─ app_en.arb
- │   ├─ app_localizations_en.dart
- │   ├─ app_localizations_pt.dart
- │   ├─ app_localizations.dart
- │   ├─ app_pt.arb
- │   └─ l10n_messages.dart
- │
- ├─ src/
- │   └─ core/
- │       └─ extensions/
- │           └─ build_context_extension.dart
- │
-tools/
- └─ generate_l10n_messages.dart
-```
-
-## Practical Usage
-
-### Usage in the Presentation Layer
-
-Message intent resolution happens exclusively in the presentation layer:
-
-```dart
-Text(
-  context.l10n(L10nMessages.tutorialTitle),
-);
-```
-
-No other layer needs `BuildContext`.
-
-### Dynamic Messages
+#### Dynamic message
 
 ```dart
 static LocalizedMessage exampleDynamic({
@@ -242,15 +189,7 @@ static LocalizedMessage exampleDynamic({
     (l10n) => l10n.exampleDynamic(name);
 ```
 
-Usage:
-
-```dart
-context.l10n(
-  L10nMessages.exampleDynamic(name: 'Dário'),
-);
-```
-
-### Pluralization
+#### Pluralization
 
 ```dart
 static LocalizedMessage examplePlural({
@@ -259,7 +198,46 @@ static LocalizedMessage examplePlural({
     (l10n) => l10n.examplePlural(count);
 ```
 
-Usage:
+## Folder Structure
+
+```text
+lib/
+├─ l10n/
+│  ├─ app_en.arb
+│  ├─ app_pt.arb
+│  ├─ app_localizations.dart
+│  ├─ app_localizations_en.dart
+│  ├─ app_localizations_pt.dart
+│  └─ l10n_messages.dart
+│
+├─ src/
+│  └─ core/
+│     └─ extensions/
+│        └─ build_context_extension.dart
+│
+tools/
+└─ generate_l10n_messages.dart
+```
+
+## Usage in Practice
+
+In the presentation layer:
+
+```dart
+Text(
+  context.l10n(L10nMessages.tutorialTitle),
+);
+```
+
+For dynamic messages:
+
+```dart
+context.l10n(
+  L10nMessages.exampleDynamic(name: 'Dário'),
+);
+```
+
+For pluralization:
 
 ```dart
 context.l10n(
@@ -269,7 +247,18 @@ context.l10n(
 
 ## Automatic Message Generation
 
-The solution includes a script responsible for automatically generating the `l10n_messages.dart` file from the ARB:
+To prevent inconsistencies between `.arb` files and the intentions catalog (`L10nMessages`), the solution includes an **automatic code generation** process.
+
+Manually maintaining the mapping between ARB keys and methods in `l10n_messages.dart` may lead to:
+
+- Typographical errors;
+- Divergence between key names and method names;
+- Incorrect parameters in dynamic messages;
+- Silent failures that only appear at runtime.
+
+To eliminate this risk, a script transforms the base ARB file into a typed catalog of message intentions, ensuring structural alignment between translation and code.
+
+### Script Execution
 
 ```bash
 dart tools/generate_l10n_messages.dart
@@ -277,13 +266,43 @@ dart tools/generate_l10n_messages.dart
 
 The script:
 
-- Reads the base ARB;
+- Reads the base ARB file;
 - Ignores metadata (`@key`);
 - Identifies placeholders;
 - Generates getters or methods as needed;
 - Automatically maps types.
 
-This ensures full consistency between ARB and code.
+This guarantees full consistency between ARB and code.
+
+## Advantages and Trade-offs
+
+### Advantages
+
+- Architectural isolation;
+- Elimination of `BuildContext` dependency outside the UI;
+- Improved testability;
+- Explicit control over when translation occurs;
+- Compatible with Clean Architecture;
+- Strong typing.
+
+### Trade-offs
+
+- Slight increase in verbosity;
+- Requires architectural discipline;
+- May seem like overengineering for small applications;
+- Introduces an intermediate abstraction layer.
+
+## Compatibility with the Official System
+
+This solution **does not replace Flutter’s official internationalization system**.
+
+It fully utilizes:
+
+- `AppLocalizations`
+- `.arb` files
+- Standard code generation
+
+The proposal simply reorganizes how the official system is used architecturally, ensuring proper separation of responsibilities.
 
 ## License
 
