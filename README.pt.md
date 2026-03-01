@@ -13,36 +13,34 @@
 <h1 align="center">Internacionalização em Flutter com Arquitetura em Camadas</h1>
 
 <p align="center">
-Internacionalização em Flutter orientada à arquitetura, baseada na separação em camadas, desacoplamento de responsabilidades e resolução controlada de traduções.
+Uma abordagem arquitetural para internacionalização em Flutter baseada em separação de responsabilidades, desacoplamento de camadas e resolução controlada de traduções.
 <br>
 <a href="#sobre-a-solução"><strong>Explore a documentação »</strong></a>
 </p>
 
 ## Sumário
 
-- [Sobre a Solução](#sobre-a-solução)
+- [Contexto](#contexto)
 - [O Problema da Internacionalização Tradicional](#o-problema-da-internacionalização-tradicional)
-- [A Ideia Central da Solução](#a-ideia-central-da-solução)
-- [Arquitetura e Fluxo de Responsabilidades](#arquitetura-e-fluxo-de-responsabilidades)
+- [Limitações Arquiteturais](#limitações-arquiteturais)
+- [Solução Arquitetural](#solução-arquitetural)
+- [Fluxo Conceitual](#fluxo-conceitual)
 - [Conceitos Fundamentais](#conceitos-fundamentais)
 - [Estrutura de Pastas](#estrutura-de-pastas)
 - [Uso na Prática](#uso-na-prática)
-  - [Uso na Camada de Apresentação](#uso-na-camada-de-apresentação)
-  - [Mensagens Dinâmicas](#mensagens-dinâmicas)
-  - [Pluralização](#pluralização)
 - [Geração Automática de Mensagens](#geração-automática-de-mensagens)
+- [Vantagens e Trade-offs](#vantagens-e-trade-offs)
+- [Compatibilidade com o Sistema Oficial](#compatibilidade-com-o-sistema-oficial)
 - [Licença](#licença)
 - [Autor](#autor)
 
-## Sobre a Solução
+## Contexto
 
-Esta solução adota uma abordagem **arquitetural para internacionalização em Flutter**, estruturando o processo de tradução em **camadas bem definidas** e com **responsabilidades claramente separadas**. O foco é eliminar o acoplamento direto entre a interface de usuário e as camadas inferiores, tratando a tradução como uma preocupação de infraestrutura, e não como uma dependência transversal da aplicação.
+A internacionalização em Flutter é oficialmente suportada pelo mecanismo de `AppLocalizations`, acessado por meio do `BuildContext`. Essa abordagem é adequada quando utilizada **exclusivamente na camada de apresentação**, onde o contexto da árvore de widgets está disponível e válido.
 
-Em implementações convencionais, mensagens são obtidas diretamente por meio de `AppLocalizations.of(context)`. Esse modelo exige a propagação do `BuildContext` para além da camada de apresentação, o que resulta em dependências indevidas em serviços, controladores e camadas de domínio. Além de violar princípios básicos de arquitetura, esse padrão torna o código mais frágil, visto que o `context` pode estar indisponível ou inválido fora da árvore de widgets.
+Entretanto, em aplicações organizadas por camadas, especialmente aquelas alinhadas a princípios como **Clean Architecture**, **Onion Architecture** ou **Hexagonal Architecture**, a responsabilidade por decidir _qual mensagem deve ser exibida_ frequentemente pertence a camadas de domínio ou aplicação, e não à camada de interface.
 
-Para resolver esse problema, a solução propõe um **fluxo baseado em intenção de mensagem**. Em vez de requisitar strings traduzidas, as camadas inferiores retornam uma **representação semântica da mensagem**, desacoplada de idioma, formato e mecanismo de tradução. A responsabilidade de converter essa intenção em uma string localizada é restrita ao ponto correto da aplicação, onde o `BuildContext` existe e é válido.
-
-Com isso, as camadas inferiores da aplicação **não dependem de contexto**, nem possuem conhecimento sobre `AppLocalizations`, arquivos `.arb` ou regras de localização. Elas apenas retornam intenções de mensagem, preservando isolamento arquitetural e garantindo que a tradução seja resolvida de forma controlada e previsível na camada de apresentação.
+Quando isso ocorre, o modelo tradicional começa a introduzir problemas estruturais.
 
 > **Observação**</br>
 > Esta documentação descreve exclusivamente a **arquitetura da solução de internacionalização**.</br>
@@ -50,9 +48,9 @@ Com isso, as camadas inferiores da aplicação **não dependem de contexto**, ne
 > Para esse tema, consulte:
 > [https://github.com/dariomatias-dev/materials/blob/main/technologies/Flutter/internationalization.md](https://github.com/dariomatias-dev/materials/blob/main/technologies/Flutter/internationalization.md)
 
-## Internacionalização Tradicional
+## O Problema da Internacionalização Tradicional
 
-Em Flutter, a internacionalização **é aplicada diretamente na camada de apresentação**, com as traduções sendo resolvidas durante a construção dos widgets por meio do `BuildContext`, que fornece acesso ao mecanismo nativo de localização do framework:
+No Flutter, o uso padrão da internacionalização é direto:
 
 ```dart
 Text(
@@ -60,20 +58,16 @@ Text(
 );
 ```
 
-Enquanto restrito à interface, ele é funcional e não apresenta problemas.
-O problema surge quando a aplicação evolui e **a decisão sobre qual mensagem deve ser exibida deixa de pertencer exclusivamente à camada de apresentação**.
+Enquanto restrito à interface, funciona corretamente.
 
-Em aplicações organizadas por camadas, é comum que regras de negócio determinem estados e resultados em pontos como:
+O problema surge quando decisões de negócio precisam determinar mensagens:
 
-- Controllers;
-- Services;
-- Use cases;
-- Repositories.
+- Controllers
+- Services
+- Use cases
+- Repositories
 
-Essas camadas não fazem parte da árvore de widgets e existem para expressar **decisões de domínio**, não detalhes de apresentação.
-No entanto, ao tentar reutilizar a internacionalização padrão do Flutter, acaba-se forçando a tradução para dentro dessas camadas.
-
-Um exemplo comum desse problema é o seguinte:
+Exemplo comum:
 
 ```dart
 class UserService {
@@ -97,66 +91,61 @@ class UserService {
 }
 ```
 
-Esse código ilustra claramente o problema da internacionalização tradicional quando aplicada fora da camada de apresentação:
+## Limitações Arquiteturais
 
-- O `BuildContext` passa a ser uma dependência de uma camada que não é de apresentação;
-- A lógica de negócio passa a conhecer detalhes da camada de apresentação;
-- O service se torna acoplado à árvore de widgets;
-- O código se torna frágil, pois o `context` pode não existir ou estar inválido;
-- Testes unitários passam a exigir contexto e configuração de internacionalização;
+Esse padrão gera diversos problemas:
+
+- `BuildContext` se torna dependência de camadas que não são de apresentação;
+- Lógica de domínio passa a conhecer detalhes de infraestrutura;
+- Services tornam-se acoplados à árvore de widgets;
+- Testes unitários exigem configuração de localização;
+- O `context` pode estar inválido ou inexistente;
 - A separação de responsabilidades é quebrada.
 
-O ponto central é: **a tradução está acontecendo fora da camada de apresentação**.
-Camadas de domínio não deveriam resolver texto traduzido.
+O ponto central é:
 
-## Ideia Central da Solução
+> A tradução está sendo resolvida fora da camada de apresentação.
 
-A ideia central desta solução é **separar completamente a decisão da mensagem da sua tradução final**.
+Isso viola o princípio fundamental de que **dependências devem apontar para dentro**, não para fora, como defendido por arquiteturas como Clean Architecture.
 
-Camadas inferiores da aplicação **não acessam traduções**.
-Elas apenas passam uma **intenção de mensagem**.
+## Solução Arquitetural
 
-Isso significa que essas camadas:
+A proposta desta solução é separar completamente:
 
-- Não conhecem `BuildContext`;
-- Não acessam `AppLocalizations`;
-- Não dependem do idioma ativo;
-- Apenas retornam uma **intenção de mensagem**.
+- A **decisão da mensagem**
+- Da **resolução da tradução**
+
+Camadas inferiores não retornam `String` traduzida.
+Elas retornam uma **intenção de mensagem**.
 
 A tradução acontece exclusivamente na camada de apresentação, onde:
 
 - O `BuildContext` é válido;
-- O idioma atual é conhecido;
+- O idioma ativo é conhecido;
 - O acesso ao `AppLocalizations` é seguro.
 
-Essa mudança garante que cada camada cumpra apenas sua responsabilidade.
-
-## Arquitetura e Fluxo de Responsabilidades
-
-A solução é organizada em camadas com responsabilidades bem definidas:
+## Fluxo Conceitual
 
 ```
-UI
-└─ BuildContext Extension
-└─ L10nMessages
-└─ AppLocalizations (gerado pelo Flutter)
-└─ ARB Files
+[Domain / Services]
+        ↓
+  LocalizedMessage
+        ↓
+[Presentation Layer]
+        ↓
+ AppLocalizations
+        ↓
+   String final
 ```
 
-Nesse modelo:
+#### Lógica do Fluxo
 
-- Camadas de domínio decidem **qual mensagem faz sentido**;
-- A mensagem é representada por uma abstração (`LocalizedMessage`);
-- A camada de apresentação resolve essa abstração em texto no momento correto.
-
-### Fluxo conceitual
-
-1. Camadas inferiores retornam ou expõem uma **intenção de mensagem**;
+1. Camadas inferiores retornam uma intenção de mensagem;
 2. Essa intenção não contém texto traduzido;
-4. A camada de apresentação recebe a intenção e resolve a tradução utilizando o `BuildContext`;
-5. O texto final é exibido conforme o idioma ativo.
+3. A camada de apresentação resolve a intenção utilizando o `BuildContext`;
+4. O texto final é exibido conforme o idioma ativo.
 
-Em nenhum momento camadas fora da camada de apresentação acessam traduções diretamente.
+Nenhuma camada fora da apresentação acessa traduções diretamente.
 
 ## Conceitos Fundamentais
 
@@ -168,13 +157,13 @@ typedef LocalizedMessage = String Function(AppLocalizations l10n);
 
 `LocalizedMessage` representa uma **intenção de mensagem**.
 
-Ela não contém o texto traduzido, apenas a regra de como obtê-lo quando o `AppLocalizations` estiver disponível.
+Ela define como obter o texto localizado, mas não executa a tradução até que `AppLocalizations` seja fornecido.
 
 Isso permite que mensagens sejam:
 
-- Definidas fora da camada de apresentação;
 - Transportadas entre camadas;
-- Resolvidas apenas no momento de exibição.
+- Testadas sem depender de localização;
+- Resolvidas apenas no momento correto.
 
 ### L10nMessages
 
@@ -182,14 +171,7 @@ Isso permite que mensagens sejam:
 abstract class L10nMessages {}
 ```
 
-`L10nMessages` atua como um **catálogo central de intenções de mensagens** da aplicação.
-
-Cada entrada:
-
-- Possui um nome semântico;
-- Representa uma intenção clara;
-- Mapeia diretamente as chaves do ARB;
-- Pode ser estática ou parametrizada.
+`L10nMessages` atua como um catálogo central de intenções.
 
 Exemplo:
 
@@ -198,42 +180,7 @@ static LocalizedMessage get tutorialTitle =>
     (l10n) => l10n.tutorialTitle;
 ```
 
-## Estrutura de Pastas
-
-```text
-lib/
- ├─ l10n/
- │   ├─ app_en.arb
- │   ├─ app_localizations_en.dart
- │   ├─ app_localizations_pt.dart
- │   ├─ app_localizations.dart
- │   ├─ app_pt.arb
- │   └─ l10n_messages.dart
- │
- ├─ src/
- │   └─ core/
- │       └─ extensions/
- │           └─ build_context_extension.dart
- │
-tools/
- └─ generate_l10n_messages.dart
-```
-
-## Uso na Prática
-
-### Uso na Camada de Apresentação
-
-A resolução da intenção de mensagem acontece exclusivamente na camada de apresentação:
-
-```dart
-Text(
-  context.l10n(L10nMessages.tutorialTitle),
-);
-```
-
-Nenhuma outra camada precisa de `BuildContext`.
-
-### Mensagens Dinâmicas
+#### Mensagem dinâmica
 
 ```dart
 static LocalizedMessage exampleDynamic({
@@ -242,15 +189,7 @@ static LocalizedMessage exampleDynamic({
     (l10n) => l10n.exampleDynamic(name);
 ```
 
-Uso:
-
-```dart
-context.l10n(
-  L10nMessages.exampleDynamic(name: 'Dário'),
-);
-```
-
-### Pluralização
+#### Pluralização
 
 ```dart
 static LocalizedMessage examplePlural({
@@ -259,7 +198,46 @@ static LocalizedMessage examplePlural({
     (l10n) => l10n.examplePlural(count);
 ```
 
-Uso:
+## Estrutura de Pastas
+
+```text
+lib/
+├─ l10n/
+│  ├─ app_en.arb
+│  ├─ app_pt.arb
+│  ├─ app_localizations.dart
+│  ├─ app_localizations_en.dart
+│  ├─ app_localizations_pt.dart
+│  └─ l10n_messages.dart
+│
+├─ src/
+│  └─ core/
+│     └─ extensions/
+│        └─ build_context_extension.dart
+│
+tools/
+└─ generate_l10n_messages.dart
+```
+
+## Uso na Prática
+
+Na camada de apresentação:
+
+```dart
+Text(
+  context.l10n(L10nMessages.tutorialTitle),
+);
+```
+
+Para mensagens dinâmicas:
+
+```dart
+context.l10n(
+  L10nMessages.exampleDynamic(name: 'Dário'),
+);
+```
+
+Para pluralização:
 
 ```dart
 context.l10n(
@@ -269,7 +247,18 @@ context.l10n(
 
 ## Geração Automática de Mensagens
 
-A solução inclui um script responsável por gerar automaticamente o arquivo `l10n_messages.dart` a partir do ARB:
+Para evitar inconsistências entre os arquivos `.arb` e o catálogo de intenções (`L10nMessages`), a solução inclui um processo de **geração automática de código**.
+
+Manter manualmente o mapeamento entre chaves do ARB e métodos em `l10n_messages.dart` pode gerar:
+
+- Erros de digitação;
+- Divergência entre nomes de chaves e métodos;
+- Parâmetros incorretos em mensagens dinâmicas;
+- Falhas silenciosas que só aparecem em tempo de execução.
+
+Para eliminar esse risco, um script é responsável por transformar o ARB base em um catálogo tipado de intenções de mensagem, garantindo alinhamento estrutural entre tradução e código.
+
+### Execução do Script
 
 ```bash
 dart tools/generate_l10n_messages.dart
@@ -284,6 +273,36 @@ O script:
 - Mapeia tipos automaticamente.
 
 Isso garante consistência total entre ARB e código.
+
+## Vantagens e Trade-offs
+
+### Vantagens
+
+- Isolamento arquitetural;
+- Eliminação de dependência de `BuildContext` fora da UI;
+- Maior testabilidade;
+- Controle explícito do momento de tradução;
+- Compatível com Clean Architecture;
+- Forte tipagem.
+
+### Trade-offs
+
+- Leve aumento de verbosidade;
+- Exige disciplina arquitetural;
+- Pode parecer overengineering para aplicações pequenas;
+- Introduz camada intermediária de abstração.
+
+## Compatibilidade com o Sistema Oficial
+
+Esta solução **não substitui o sistema oficial de internacionalização do Flutter**.
+
+Ela utiliza integralmente:
+
+- `AppLocalizations`
+- Arquivos `.arb`
+- Geração padrão de código
+
+A proposta apenas reorganiza arquiteturalmente o uso do sistema oficial, garantindo separação adequada de responsabilidades.
 
 ## Licença
 
